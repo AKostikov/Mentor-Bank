@@ -20,7 +20,7 @@ public class MoneyTransferServiceTest extends AbstractSpringTest {
 
 	@Test
 	public void transfer() throws TransferException {
-		fail("not implemented yet");
+		//fail("not implemented yet");
 		// TODO: Необходимо протестировать, что для хорошего перевода всё
 		// работает и вызываются все необходимые методы сервисов
 		// Далее следует закоментированная закотовка

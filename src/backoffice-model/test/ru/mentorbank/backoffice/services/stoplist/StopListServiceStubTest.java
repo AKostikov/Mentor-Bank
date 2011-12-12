@@ -26,12 +26,12 @@ public class StopListServiceStubTest extends AbstractSpringTest {
 	@Test
 	public void getJuridicalStopListInfo_OK() {
 		// setup SUT
-		stopListRequest.setInn(StopListServiceStub.INN_FOR_OK_STATUS);
+		stopListRequest.setInn(StopListServiceStub.INN_FOR_OK_STATUS); 
 		// Call SUT
 		StopListInfo info = stopListService
 				.getJuridicalStopListInfo(stopListRequest);
 		// Validate SUT
-		assertNotNull("Информация должна быть заполнена", info);
+		assertNotNull("Информация должна быть заполнена", info); 
 		assertEquals(StopListStatus.OK, info.getStatus());
 	}
 
