@@ -9,8 +9,13 @@ import ru.mentorbank.backoffice.model.transfer.JuridicalAccountInfo;
 import ru.mentorbank.backoffice.model.transfer.PhysicalAccountInfo;
 import ru.mentorbank.backoffice.model.transfer.TransferRequest;
 import ru.mentorbank.backoffice.services.accounts.AccountService;
-import ru.mentorbank.backoffice.services.moneytransfer.exceptions.TransferException;
 import ru.mentorbank.backoffice.services.stoplist.StopListService;
+import ru.mentorbank.backoffice.model.Operation;
+import ru.mentorbank.backoffice.model.Account;
+import ru.mentorbank.backoffice.dao.exception.OperationDaoException;
+import ru.mentorbank.backoffice.services.moneytransfer.exceptions.TransferException;
+import ru.mentorbank.backoffice.model.stoplist.PhysicalStopListRequest;
+
 
 public class MoneyTransferServiceBean implements MoneyTransferService {
 
@@ -63,14 +68,31 @@ public class MoneyTransferServiceBean implements MoneyTransferService {
 			dstStopListInfo = getStopListInfo(request.getDstAccount());
 		}
 
-		private void saveOperation() {
+		private void saveOperation() throws TransferException {
 			// TODO: Необходимо сделать вызов операции saveOperation и сделать
 			// соответствующий тест вызова операции operationDao.saveOperation()
+			
+			Operation operation = new Operation();
+			Account srcAccount = new Account();
+			Account dstAccount = new Account();
+			srcAccount.setAccountNumber(request.getSrcAccount().getAccountNumber());
+			dstAccount.setAccountNumber(request.getDstAccount().getAccountNumber());
+			operation.setSrcAccount(srcAccount);         
+			operation.setDstAccount(dstAccount);
+			operation.setSrcStoplistInfo(srcStopListInfo);
+			operation.setDstStoplistInfo(dstStopListInfo);
+			try {
+				operationDao.saveOperation(operation) ;
+			}
+			catch(OperationDaoException e) {
+                 throw new TransferException("Couldn't complete save operation. Details: " + e.getMessage());
+            }
 		}
 
 		private void transferDo() throws TransferException {
 			// Эту операцию пока не реализовавем. Она должна вызывать
 			// CDCMoneyTransferServiceConsumer которого ещё нет
+			// ??? 
 		}
 
 		private boolean isStopListInfoOK() {
@@ -91,17 +113,18 @@ public class MoneyTransferServiceBean implements MoneyTransferService {
 				return stopListInfo;
 			} else if (accountInfo instanceof PhysicalAccountInfo) {
 				// TODO: Сделать вызов stopListService для физических лиц
+				// similar to JuridicalStopListInfo
+				PhysicalAccountInfo physicalAccountInfo = (PhysicalAccountInfo) accountInfo;
+				PhysicalStopListRequest request = new PhysicalStopListRequest();
+				request.setFirstname( physicalAccountInfo.getFirstname() );
+			 	request.setLastname( physicalAccountInfo.getLastname() );
+			 	request.setMiddlename( physicalAccountInfo.getMiddlename() );
+			 	StopListInfo stopListInfo = stopListService.getPhysicalStopListInfo(request);
+			 	return stopListInfo;
 			}
 			return null;
 		}
-
-		private boolean processStopListStatus(StopListInfo stopListInfo)
-				throws TransferException {
-			if (StopListStatus.ASKSECURITY.equals(stopListInfo.getStatus())) {
-				return false;
-			}
-			return true;
-		}
+				
 
 		private void verifySrcBalance() throws TransferException {
 			if (!accountService.verifyBalance(request.getSrcAccount()))
